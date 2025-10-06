@@ -4,12 +4,14 @@ import java.util.List;
 import ejercicio1.*;
 import ejercicio2.*;
 import ejercicio3.*;
+import ejercicio4.*;
 
 public class MenuManager {
     private Scanner scanner;
     private ATM atm;
     private Estacionamiento estacionamiento;
     private Reproductor reproductor;
+    private Carrito carrito;
 
     public MenuManager(Scanner scanner) {
         this.scanner = scanner;
@@ -35,8 +37,19 @@ public class MenuManager {
         reproductor.agregarAudio(new Cancion("Blinding Lights", "The Weeknd", 3.20, "Pop"));
         reproductor.agregarAudio(new Podcast("Tecnología y Futuro", "Tech Podcast", 45.30, 2, 15));
         reproductor.agregarAudio(new Podcast("Historias Perdidas", "Radio Mysteria", 30.15, 1, 8));
-    }
 
+        // Inicializar Carrito (ejercicio4)
+        this.carrito = new Carrito();
+
+        // Agregar algunos productos de ejemplo
+        Producto laptop = new Producto("Laptop Gamer", 1500.0);
+        Producto mouse = new Producto("Mouse RGB", 45.0, true); // Aplica 2x1
+        Producto teclado = new Producto("Teclado Mecánico", 120.0);
+
+        carrito.agregarItem(laptop, 1);
+        carrito.agregarItem(mouse, 3); // Aplicará 2x1
+        carrito.agregarItem(teclado, 1);
+    }
     public void mostrarMenuPrincipal() {
         int opcion = -1;
 
@@ -333,6 +346,7 @@ public class MenuManager {
         System.out.printf("Validación: %s\n",
                 Math.abs(recaudacionEsperada - simulacion.getRecaudacionTotal()) < 0.01 ? "ÉXITO" : "FALLO");
     }
+
     private void gestionarStreamingMusica() {
         int opcion = -1;
         while (opcion != 0) {
@@ -492,8 +506,147 @@ public class MenuManager {
     }
 
     private void gestionarEcommerce() {
-        System.out.println("Ejercicio 4 - En construcción");
+        int opcion = -1;
+        while (opcion != 0) {
+            System.out.println("\n--- E-COMMERCE CON DESCUENTOS ---");
+            System.out.println("1. Agregar producto al carrito");
+            System.out.println("2. Aplicar descuento por porcentaje");
+            System.out.println("3. Aplicar descuento por monto fijo");
+            System.out.println("4. Aplicar promoción 2x1");
+            System.out.println("5. Remover descuento");
+            System.out.println("6. Mostrar desglose del carrito");
+            System.out.println("7. Test con diferentes estrategias");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione una opción: ");
+
+            try {
+                opcion = Integer.parseInt(scanner.nextLine());
+
+                switch (opcion) {
+                    case 1:
+                        agregarProductoAlCarrito();
+                        break;
+                    case 2:
+                        aplicarDescuentoPorcentaje();
+                        break;
+                    case 3:
+                        aplicarDescuentoMontoFijo();
+                        break;
+                    case 4:
+                        aplicarPromocion2x1();
+                        break;
+                    case 5:
+                        removerDescuento();
+                        break;
+                    case 6:
+                        mostrarDesgloseCarrito();
+                        break;
+                    case 7:
+                        testEstrategiasDescuento();
+                        break;
+                    case 0:
+                        System.out.println("Volviendo al menú principal...");
+                        break;
+                    default:
+                        System.out.println("Opción no válida.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Ingrese una opción válida (número).");
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+        }
     }
+    private void agregarProductoAlCarrito() {
+        System.out.print("Nombre del producto: ");
+        String nombre = scanner.nextLine();
+
+        System.out.print("Precio del producto: ");
+        double precio = Double.parseDouble(scanner.nextLine());
+
+        System.out.print("¿Aplica promoción 2x1? (s/n): ");
+        String aplica2x1 = scanner.nextLine().toLowerCase();
+        boolean promocion2x1 = aplica2x1.equals("s");
+
+        System.out.print("Cantidad: ");
+        int cantidad = Integer.parseInt(scanner.nextLine());
+
+        Producto producto = new Producto(nombre, precio, promocion2x1);
+        carrito.agregarItem(producto, cantidad);
+        System.out.println("Producto agregado al carrito.");
+    }
+
+    private void aplicarDescuentoPorcentaje() {
+        System.out.print("Ingrese el porcentaje de descuento (0-100): ");
+        double porcentaje = Double.parseDouble(scanner.nextLine());
+
+        EstrategiaDescuento estrategia = new DescuentoPorcentaje(porcentaje);
+        carrito.setEstrategiaDescuento(estrategia);
+        System.out.printf("Descuento del %.1f%% aplicado.\n", porcentaje);
+    }
+
+    private void aplicarDescuentoMontoFijo() {
+        System.out.print("Ingrese el monto fijo de descuento: ");
+        double monto = Double.parseDouble(scanner.nextLine());
+
+        EstrategiaDescuento estrategia = new DescuentoMontoFijo(monto);
+        carrito.setEstrategiaDescuento(estrategia);
+        System.out.printf("Descuento fijo de $%.2f aplicado.\n", monto);
+    }
+
+    private void aplicarPromocion2x1() {
+        EstrategiaDescuento estrategia = new DescuentoLleva2Paga1();
+        carrito.setEstrategiaDescuento(estrategia);
+        System.out.println("Promoción 'Lleva 2, paga 1' aplicada (en productos seleccionados).");
+    }
+
+    private void removerDescuento() {
+        carrito.removerEstrategiaDescuento();
+        System.out.println("Descuento removido.");
+    }
+
+    private void mostrarDesgloseCarrito() {
+        carrito.mostrarDesglose();
+    }
+
+    private void testEstrategiasDescuento() {
+        System.out.println("\n--- TEST CON DIFERENTES ESTRATEGIAS ---");
+
+        // Crear un carrito de prueba
+        Carrito carritoTest = new Carrito();
+        Producto producto1 = new Producto("Producto Test 1", 100.0);
+        Producto producto2 = new Producto("Producto Test 2", 50.0, true); // Con 2x1
+
+        carritoTest.agregarItem(producto1, 2);
+        carritoTest.agregarItem(producto2, 4); // Aplicará 2x1
+
+        System.out.println("Carrito de prueba creado con:");
+        System.out.println("  2 x Producto Test 1 @ $100 c/u");
+        System.out.println("  4 x Producto Test 2 @ $50 c/u (con 2x1)");
+
+        // Probar sin descuento
+        System.out.println("\n1. Sin descuento:");
+        carritoTest.removerEstrategiaDescuento();
+        carritoTest.mostrarDesglose();
+
+        // Probar con descuento del 10%
+        System.out.println("\n2. Con descuento del 10%:");
+        carritoTest.setEstrategiaDescuento(new DescuentoPorcentaje(10));
+        carritoTest.mostrarDesglose();
+
+        // Probar con descuento de $50
+        System.out.println("\n3. Con descuento de $50:");
+        carritoTest.setEstrategiaDescuento(new DescuentoMontoFijo(50));
+        carritoTest.mostrarDesglose();
+
+        // Probar con promoción 2x1 (ya aplicada en los items)
+        System.out.println("\n4. Con promoción 2x1:");
+        carritoTest.setEstrategiaDescuento(new DescuentoLleva2Paga1());
+        carritoTest.mostrarDesglose();
+
+        System.out.println("\n✅ Test completado - Mismo carrito, diferentes totales según la estrategia");
+    }
+
 
     private void gestionarAgendaMedica() {
         System.out.println("Ejercicio 5 - En construcción");
